@@ -5,6 +5,8 @@ import Register from './pages/auth/Register';
 import authService from './services/authService';
 import ProblemList from './pages/ProblemList/ProblemList';
 import ProblemDetail from './pages/ProblemDetail/ProblemDetail';
+import SubmissionList from './pages/Submission/SubmissionList';
+
 // Bảo vệ tuyến đường yêu cầu xác thực
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = authService.isAuthenticated();
@@ -54,9 +56,7 @@ const App = () => {
         
         {/* Các route được bảo vệ khác */}
         <Route path="/cac-bai-da-nop" element={
-          <ProtectedRoute>
-            <div>Trang các bài đã nộp</div>
-          </ProtectedRoute>
+          <SubmissionList />
         } />
         
         <Route path="/cac-ky-thi" element={
