@@ -6,14 +6,32 @@ import authService from './services/authService';
 import ProblemList from './pages/ProblemList/ProblemList';
 import ProblemDetail from './pages/ProblemDetail/ProblemDetail';
 import SubmissionList from './pages/Submission/SubmissionList';
+import AddProblem from './pages/Admin/AddProblem';
 
-// Bảo vệ tuyến đường yêu cầu xác thực
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = authService.isAuthenticated();
   
   if (!isAuthenticated) {
     // Chuyển hướng đến trang đăng nhập nếu chưa xác thực
     return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
+
+// Bảo vệ tuyến đường chỉ dành cho admin
+const AdminRoute = ({ children }) => {
+  const isAuthenticated = authService.isAuthenticated();
+  const isAdmin = authService.isAdmin();
+  
+  if (!isAuthenticated) {
+    // Chuyển hướng đến trang đăng nhập nếu chưa xác thực
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!isAdmin) {
+    // Chuyển hướng đến trang danh sách bài tập nếu không phải admin
+    return <Navigate to="/danh-sach-bai" replace />;
   }
   
   return children;
@@ -36,7 +54,7 @@ const App = () => {
         <Route path="/" element={
           authService.isAuthenticated() ? 
             <Navigate to="/danh-sach-bai" replace /> : 
-            <Navigate to="/login" replace /> // Thay đổi từ "/login" -> "/danh-sach-bai"
+            <Navigate to="/login" replace />
         } />
         
         <Route path="/login" element={
@@ -54,10 +72,23 @@ const App = () => {
         {/* Thay đổi từ ProtectedRoute sang để mọi người đều xem được */}
         <Route path="/danh-sach-bai" element={<ProblemList />} />
         
-        {/* Các route được bảo vệ khác */}
-        <Route path="/cac-bai-da-nop" element={
-          <SubmissionList />
+        {/* Route thêm bài tập - chỉ admin mới thêm được */}
+        <Route path="/admin/them-bai-tap" element={
+          <AdminRoute>
+            <AddProblem />
+          </AdminRoute>
         } />
+        
+        {/* Các route khác */}
+        <Route path="/problems/:id" element={<ProblemDetail />} />
+        
+        <Route path="/bai-nop" element={
+          <ProtectedRoute>
+            <SubmissionList />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/cac-bai-da-nop" element={<SubmissionList />} />
         
         <Route path="/cac-ky-thi" element={
           <ProtectedRoute>
@@ -72,7 +103,6 @@ const App = () => {
         } />
         
         <Route path="*" element={<Navigate to="/" replace />} />
-        <Route path="/problems/:id" element={<ProblemDetail />} />
       </Routes>
     </Router>
   );

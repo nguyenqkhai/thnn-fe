@@ -29,6 +29,9 @@ const authService = {
       if (response.data.access_token) {
         // Lưu token vào localStorage
         localStorage.setItem('token', response.data.access_token);
+        
+        // Lấy thông tin người dùng và lưu vào localStorage
+        await this.storeUserInfo();
       }
       
       return response.data;
@@ -49,14 +52,18 @@ const authService = {
     }
   },
 
-  // Lấy thông tin người dùng
-  async getUserInfo() {
+  // Lấy thông tin người dùng và lưu vào localStorage
+  async storeUserInfo() {
     try {
-      const response = await axios.get(`${API_URL}/me`, {
+      const response = await axios.get('http://localhost:8000/api/v1/users/me', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
+      
+      // Lưu thông tin người dùng vào localStorage
+      localStorage.setItem('user_info', JSON.stringify(response.data));
+      
       return response.data;
     } catch (error) {
       console.error('Lỗi khi lấy thông tin người dùng');
@@ -65,24 +72,61 @@ const authService = {
   },
 
   // Lấy username của người dùng hiện tại
-  async getUsername() {
-    try {
-      const userInfo = await this.getUserInfo();
-      return userInfo.username;
-    } catch (error) {
-      console.error('Lỗi khi lấy username');
-      return null;
-    }
+  getUsername() {
+    const userInfo = this.getUserInfo();
+    return userInfo ? userInfo.username : null;
+  },
+
+  // Lấy thông tin người dùng từ localStorage
+  getUserInfo() {
+    const userInfo = localStorage.getItem('user_info');
+    return userInfo ? JSON.parse(userInfo) : null;
+  },
+
+  // Kiểm tra xem người dùng có phải là admin không
+  isAdmin() {
+    const userInfo = this.getUserInfo();
+    return userInfo ? userInfo.is_admin : false;
   },
 
   // Đăng xuất
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('user_info');
   },
   
   // Kiểm tra đã đăng nhập chưa
   isAuthenticated() {
-    return localStorage.getItem('token') ? true : false;
+    // Kiểm tra xem có token trong localStorage hay không
+    const token = localStorage.getItem('token');
+    
+    // Nếu không có token, người dùng chưa đăng nhập
+    if (!token) {
+      return false;
+    }
+    
+    // Kiểm tra có thông tin người dùng không
+    const userInfo = this.getUserInfo();
+    
+    // Nếu có token nhưng không có thông tin người dùng, thử lấy thông tin người dùng
+    if (!userInfo) {
+      try {
+        // Cố gắng lấy thông tin người dùng một cách bất đồng bộ
+        // Điều này có thể không hoạt động tốt trong một hàm đồng bộ
+        // nên chúng ta sẽ trả về true và để lần gọi API tiếp theo xác thực token
+        this.storeUserInfo().catch(() => {
+          // Nếu có lỗi, xóa token
+          this.logout();
+        });
+        return true;
+      } catch (error) {
+        this.logout();
+        return false;
+      }
+    }
+    
+    // Nếu có token và thông tin người dùng, coi như đã đăng nhập
+    return true;
   },
   
   // Xử lý lỗi từ API
