@@ -18,13 +18,13 @@ const ContestList = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   
-  // Kiểm tra trạng thái đăng nhập
+  // Check authentication status
   useEffect(() => {
     setIsAuthenticated(authService.isAuthenticated());
     setIsAdmin(authService.isAdmin());
   }, []);
   
-  // Lấy danh sách cuộc thi
+  // Fetch contests
   useEffect(() => {
     const fetchContests = async () => {
       try {
@@ -32,7 +32,7 @@ const ContestList = () => {
         let url = `${API_BASE_URL}/contests/`;
         let params = { status: filter !== 'all' ? filter : undefined };
         
-        // Thêm token nếu đã đăng nhập
+        // Add token if logged in
         const headers = {};
         const token = localStorage.getItem('token');
         if (token) {
@@ -40,7 +40,17 @@ const ContestList = () => {
         }
         
         const response = await axios.get(url, { params, headers });
-        setContests(response.data);
+        
+        // Kiểm tra và đảm bảo dữ liệu hợp lệ
+        if (Array.isArray(response.data)) {
+          setContests(response.data);
+        } else if (response.data && Array.isArray(response.data.results)) {
+          setContests(response.data.results);
+        } else {
+          console.error('Unexpected API response format:', response.data);
+          setContests([]);
+          setError('Dữ liệu trả về không đúng định dạng. Vui lòng thử lại sau.');
+        }
       } catch (err) {
         console.error('Lỗi khi tải danh sách cuộc thi:', err);
         setError('Không thể tải danh sách cuộc thi. Vui lòng thử lại sau.');
@@ -58,37 +68,37 @@ const ContestList = () => {
     
     const date = new Date(dateTimeStr);
     
-    // Định dạng ngày tháng
+    // Format date
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
     
-    // Định dạng giờ phút
+    // Format time
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
   
-  // Kiểm tra trạng thái cuộc thi
+  // Check contest status
   const getContestStatus = (startTime, endTime) => {
     const now = new Date();
     const start = new Date(startTime);
     const end = new Date(endTime);
     
     if (now < start) {
-      return { text: 'Sắp diễn ra', className: 'bg-blue-100 text-blue-800' };
+      return { text: 'Upcoming', className: 'bg-blue-100 text-blue-800' };
     } else if (now >= start && now <= end) {
-      return { text: 'Đang diễn ra', className: 'bg-green-100 text-green-800' };
+      return { text: 'Ongoing', className: 'bg-green-100 text-green-800' };
     } else {
-      return { text: 'Đã kết thúc', className: 'bg-gray-100 text-gray-800' };
+      return { text: 'Finished', className: 'bg-gray-100 text-gray-800' };
     }
   };
   
-  // Lọc cuộc thi theo từ khóa tìm kiếm
+  // Filter contests by search term
   const filteredContests = contests.filter(contest => 
     contest.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contest.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (contest.description && contest.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
   if (loading) {
@@ -110,7 +120,7 @@ const ContestList = () => {
       <main className="container mx-auto px-4 py-8 flex-grow">
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">Danh Sách Cuộc Thi</h1>
+            <h1 className="text-2xl font-bold text-white">Danh sách cuộc thi</h1>
             
             {isAdmin && (
               <Link
@@ -203,13 +213,18 @@ const ContestList = () => {
                 <h3 className="mt-2 text-sm font-medium text-gray-900">Không tìm thấy cuộc thi nào</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   {searchTerm 
-                    ? 'Không có cuộc thi nào phù hợp với từ khóa tìm kiếm.' 
+                    ? 'Không có cuộc thi nào phù hợp với từ khóa tìm kiếm của bạn.' 
                     : 'Không có cuộc thi nào trong danh mục này.'}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredContests.map(contest => {
+                  // Đảm bảo contest có ID hợp lệ
+                  if (!contest.id) {
+                    return null;
+                  }
+                  
                   const status = getContestStatus(contest.start_time, contest.end_time);
                   return (
                     <div key={contest.id} className="bg-white overflow-hidden shadow rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
@@ -217,7 +232,7 @@ const ContestList = () => {
                         <div className="flex justify-between items-start">
                           <h3 className="text-lg font-medium text-gray-900 truncate">{contest.title}</h3>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.className}`}>
-                            {status.text}
+                            {status.text === 'Upcoming' ? 'Sắp diễn ra' : status.text === 'Ongoing' ? 'Đang diễn ra' : 'Đã kết thúc'}
                           </span>
                         </div>
                         
@@ -251,12 +266,12 @@ const ContestList = () => {
                         <div className="mt-5">
                           {contest.requires_approval && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mr-2">
-                              Cần phê duyệt
+                              Yêu cầu phê duyệt
                             </span>
                           )}
                           {!contest.is_public && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              Giới hạn
+                              Riêng tư
                             </span>
                           )}
                         </div>
@@ -264,7 +279,7 @@ const ContestList = () => {
                       <div className="bg-gray-50 px-4 py-4 sm:px-6">
                         <div className="text-sm">
                           <Link
-                            to={`/cuoc-thi/${contest.id}`}
+                            to={`/cac-ky-thi/${contest.id}`}
                             className="font-medium text-blue-600 hover:text-blue-500"
                           >
                             Xem chi tiết

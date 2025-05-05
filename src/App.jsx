@@ -12,6 +12,9 @@ import EditProblem from './pages/Admin/EditProblem';
 import UserManagement from './pages/Admin/UserManagement';
 import UserProfile from './pages/Profile/UserProfile';
 import AdminProfile from './pages/Profile/AdminDashboard';
+import CreateContest from './pages/Admin/CreateContest';
+import ContestList from './pages/Contest/ContestList';
+import ContestDetail from './pages/Contest/ContestDetail';
 
 // Bảo vệ tuyến đường chỉ dành cho người dùng đã đăng nhập
 const ProtectedRoute = ({ children }) => {
@@ -96,11 +99,10 @@ const App = () => {
         
         <Route path="/cac-bai-da-nop" element={<SubmissionList />} />
         
-        <Route path="/cac-ky-thi" element={
-          <ProtectedRoute>
-            <div>Trang kỳ thi</div>
-          </ProtectedRoute>
-        } />
+        <Route path="/cac-ky-thi" element={<ContestList />} />
+
+        {/* Đường dẫn trang chi tiết cuộc thi - CHỈ GIỮA MỘT ĐƯỜNG DẪN */}
+        <Route path="/cac-ky-thi/:contestId" element={<ContestDetail />} />
         
         {/* Updated User Profile Routes */}
         <Route path="/thong-tin-ca-nhan" element={
@@ -124,6 +126,12 @@ const App = () => {
         <Route path="/admin/quan-ly-nguoi-dung" element={
           <AdminRoute>
             <UserManagement />
+          </AdminRoute>
+        } />
+
+        <Route path="/admin/tao-ky-thi" element={
+          <AdminRoute>
+            <CreateContest />
           </AdminRoute>
         } />
         
