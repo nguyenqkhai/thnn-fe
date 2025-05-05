@@ -10,6 +10,9 @@ import AddProblem from './pages/Admin/AddProblem';
 import ManageProblems from './pages/Admin/ManageProblems';
 import EditProblem from './pages/Admin/EditProblem';
 import UserManagement from './pages/Admin/UserManagement';
+import UserProfile from './pages/Profile/UserProfile';
+import AdminProfile from './pages/Profile/AdminProfile';
+
 // Bảo vệ tuyến đường chỉ dành cho người dùng đã đăng nhập
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = authService.isAuthenticated();
@@ -99,27 +102,37 @@ const App = () => {
           </ProtectedRoute>
         } />
         
+        {/* Updated User Profile Routes */}
         <Route path="/thong-tin-ca-nhan" element={
           <ProtectedRoute>
-            <div>Trang thông tin cá nhân</div>
+            <UserProfile />
           </ProtectedRoute>
         } />
         
+        <Route path="/admin/thong-tin-ca-nhan" element={
+          <AdminRoute>
+            <AdminProfile />
+          </AdminRoute>
+        } />
+        
         <Route path="/admin/quan-ly-bai-tap" element={
-  <AdminRoute>
-    <ManageProblems />
-  </AdminRoute>
-} />
-<Route path="/admin/quan-ly-nguoi-dung" element={
-  <AdminRoute>
-    <UserManagement />
-  </AdminRoute>
-} />
-<Route path="/admin/sua-bai-tap/:id" element={
-  <AdminRoute>
-    <EditProblem />
-  </AdminRoute>
-} />
+          <AdminRoute>
+            <ManageProblems />
+          </AdminRoute>
+        } />
+        
+        <Route path="/admin/quan-ly-nguoi-dung" element={
+          <AdminRoute>
+            <UserManagement />
+          </AdminRoute>
+        } />
+        
+        <Route path="/admin/sua-bai-tap/:id" element={
+          <AdminRoute>
+            <EditProblem />
+          </AdminRoute>
+        } />
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
