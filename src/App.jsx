@@ -11,7 +11,7 @@ import ManageProblems from './pages/Admin/ManageProblems';
 import EditProblem from './pages/Admin/EditProblem';
 import UserManagement from './pages/Admin/UserManagement';
 import UserProfile from './pages/Profile/UserProfile';
-import AdminProfile from './pages/Profile/AdminProfile';
+import AdminProfile from './pages/Profile/AdminDashboard';
 
 // Bảo vệ tuyến đường chỉ dành cho người dùng đã đăng nhập
 const ProtectedRoute = ({ children }) => {
@@ -109,7 +109,7 @@ const App = () => {
           </ProtectedRoute>
         } />
         
-        <Route path="/admin/thong-tin-ca-nhan" element={
+        <Route path="/admin/quan-ly" element={
           <AdminRoute>
             <AdminProfile />
           </AdminRoute>
