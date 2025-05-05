@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Cột 1: Thông tin về hệ thống */}
           <div className="text-center md:text-left">
-            <h3 className="text-lg font-bold mb-3">MilkStore</h3>
+            <h3 className="text-lg font-bold mb-3">FlaDev</h3>
             <p className="text-gray-400 text-sm mb-4">
               Nền tảng lập trình trực tuyến hàng đầu với các bài tập, kỳ thi và tài liệu học tập chất lượng cao.
             </p>
@@ -53,11 +53,11 @@ const Footer = () => {
                   Các kỳ thi
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link to="/thong-tin-ca-nhan" className="text-gray-400 hover:text-white transition-colors duration-300">
                   Trang cá nhân
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
           
@@ -69,7 +69,7 @@ const Footer = () => {
                 <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span>support@milkstore.com</span>
+                <span>support@fladev.com</span>
               </li>
               <li className="flex items-center justify-center md:justify-start text-gray-400">
                 <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,7 +82,7 @@ const Footer = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span>Quận 1, TP. Hồ Chí Minh, Việt Nam</span>
+                <span>280 An Dương Vương, phường 4, Quận 5</span>
               </li>
             </ul>
           </div>
@@ -90,7 +90,7 @@ const Footer = () => {
         
         {/* Bản quyền */}
         <div className="text-center text-sm text-gray-400 pt-4 border-t border-gray-700">
-          &copy; {new Date().getFullYear()} MilkStore. Tất cả các quyền được bảo lưu.
+          &copy; {new Date().getFullYear()} FlaDev. Tất cả các quyền được bảo lưu.
         </div>
       </div>
     </footer>

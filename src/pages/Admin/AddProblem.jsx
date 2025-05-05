@@ -4,7 +4,6 @@ import axios from 'axios';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
 import LoadingSpinner from '../ProblemList/components/LoadingSpinner';
-import ErrorMessage from '../../components/ui/ErrorMessage';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
@@ -24,11 +23,36 @@ const AddProblem = () => {
     memory_limit_kb: 262144
   });
   
+  // Thêm state mới cho test cases
+  const [testCases, setTestCases] = useState([
+    // Test case mẫu từ example input/output
+    {
+      input: '',
+      expected_output: '',
+      is_sample: true,
+      order: 1
+    }
+  ]);
+  
   const [tagInput, setTagInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Thêm useEffect để đồng bộ example_input/output với test case mẫu
+  useEffect(() => {
+    // Cập nhật test case mẫu khi example_input hoặc example_output thay đổi
+    const updatedTestCases = [...testCases];
+    if (updatedTestCases[0]) {
+      updatedTestCases[0] = {
+        ...updatedTestCases[0],
+        input: formData.example_input,
+        expected_output: formData.example_output
+      };
+      setTestCases(updatedTestCases);
+    }
+  }, [formData.example_input, formData.example_output]);
   
   // Kiểm tra xem người dùng có phải là admin không
   useEffect(() => {
@@ -121,28 +145,97 @@ const AddProblem = () => {
     }));
   };
   
-  // Handle submission
+  // Thêm các hàm mới để xử lý test cases
+  const handleTestCaseChange = (index, field, value) => {
+    const updatedTestCases = [...testCases];
+    updatedTestCases[index] = {
+      ...updatedTestCases[index],
+      [field]: value
+    };
+    
+    // Nếu đang thay đổi test case mẫu, cập nhật example_input và example_output
+    if (index === 0 && updatedTestCases[0].is_sample) {
+      if (field === 'input') {
+        setFormData(prev => ({ ...prev, example_input: value }));
+      } else if (field === 'expected_output') {
+        setFormData(prev => ({ ...prev, example_output: value }));
+      }
+    }
+    
+    setTestCases(updatedTestCases);
+  };
+  
+  const addTestCase = () => {
+    setTestCases([
+      ...testCases,
+      {
+        input: '',
+        expected_output: '',
+        is_sample: false,
+        order: testCases.length + 1
+      }
+    ]);
+  };
+  
+  const removeTestCase = (index) => {
+    // Không cho phép xóa test case mẫu đầu tiên
+    if (index === 0 && testCases[0].is_sample) {
+      return;
+    }
+    
+    const updatedTestCases = testCases.filter((_, i) => i !== index);
+    // Cập nhật lại order
+    for (let i = 0; i < updatedTestCases.length; i++) {
+      updatedTestCases[i].order = i + 1;
+    }
+    
+    setTestCases(updatedTestCases);
+  };
+  
+  // Validate form
+  const validateForm = () => {
+    if (!formData.title.trim()) {
+      setError('Vui lòng nhập tiêu đề bài tập');
+      return false;
+    }
+    if (!formData.description.trim()) {
+      setError('Vui lòng nhập mô tả bài tập');
+      return false;
+    }
+    if (!formData.example_input.trim()) {
+      setError('Vui lòng nhập ví dụ input');
+      return false;
+    }
+    if (!formData.example_output.trim()) {
+      setError('Vui lòng nhập ví dụ output');
+      return false;
+    }
+    if (!formData.constraints.trim()) {
+      setError('Vui lòng nhập ràng buộc');
+      return false;
+    }
+    return true;
+  };
+  
+  // Cập nhật hàm handleSubmit để thêm test cases
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    
+    if (!validateForm()) return;
     
     try {
-      // Validate form
-      if (!formData.title.trim()) {
-        throw new Error('Vui lòng nhập tiêu đề bài tập');
+      setLoading(true);
+      setError(null);
+      
+      // Validate test cases
+      if (testCases.length === 0) {
+        throw new Error('Vui lòng thêm ít nhất một test case');
       }
-      if (!formData.description.trim()) {
-        throw new Error('Vui lòng nhập mô tả bài tập');
-      }
-      if (!formData.example_input.trim()) {
-        throw new Error('Vui lòng nhập ví dụ input');
-      }
-      if (!formData.example_output.trim()) {
-        throw new Error('Vui lòng nhập ví dụ output');
-      }
-      if (!formData.constraints.trim()) {
-        throw new Error('Vui lòng nhập ràng buộc');
+      
+      for (const testCase of testCases) {
+        if (!testCase.input.trim() || !testCase.expected_output.trim()) {
+          throw new Error('Tất cả test cases phải có cả input và expected output');
+        }
       }
       
       // Get token
@@ -151,7 +244,7 @@ const AddProblem = () => {
         throw new Error('Vui lòng đăng nhập để thêm bài tập');
       }
       
-      // Send request
+      // Send request to create problem
       const response = await axios.post(
         `${API_BASE_URL}/problems/`,
         formData,
@@ -163,12 +256,29 @@ const AddProblem = () => {
         }
       );
       
+      // Lấy problem_id từ response
+      const problemId = response.data.id;
+      
+      // Tạo các test case (trừ test case mẫu đầu tiên vì đã được tạo tự động)
+      for (let i = 1; i < testCases.length; i++) {
+        await axios.post(
+          `${API_BASE_URL}/problems/${problemId}/test-cases`,
+          testCases[i],
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
+      
       // Handle success
       setSuccess(true);
       
       // Navigate to problem detail after 2 seconds
       setTimeout(() => {
-        navigate(`/problems/${response.data.id}`);
+        navigate(`/problems/${problemId}`);
       }, 2000);
       
     } catch (err) {
@@ -177,6 +287,96 @@ const AddProblem = () => {
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Render test cases section
+  const renderTestCasesSection = () => {
+    return (
+      <div className="mt-8">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Test Cases <span className="text-red-500">*</span>
+        </h3>
+        
+        <div className="space-y-6">
+          {testCases.map((testCase, index) => (
+            <div key={index} className="p-4 border border-gray-300 rounded-md">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="font-medium">
+                  {testCase.is_sample ? "Test Case Mẫu" : `Test Case #${index + 1}`}
+                </h4>
+                
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => removeTestCase(index)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Input
+                  </label>
+                  <textarea
+                    value={testCase.input}
+                    onChange={(e) => handleTestCaseChange(index, 'input', e.target.value)}
+                    rows={4}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Expected Output
+                  </label>
+                  <textarea
+                    value={testCase.expected_output}
+                    onChange={(e) => handleTestCaseChange(index, 'expected_output', e.target.value)}
+                    rows={4}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                    required
+                  />
+                </div>
+                
+                {!testCase.is_sample && (
+                  <div className="flex items-center">
+                    <input
+                      id={`is_sample_${index}`}
+                      name={`is_sample_${index}`}
+                      type="checkbox"
+                      checked={testCase.is_sample}
+                      onChange={(e) => handleTestCaseChange(index, 'is_sample', e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`is_sample_${index}`} className="ml-2 block text-sm text-gray-700">
+                      Hiển thị cho người dùng (sample test case)
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          
+          <button
+            type="button"
+            onClick={addTestCase}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Thêm Test Case
+          </button>
+        </div>
+      </div>
+    );
   };
   
   // Nếu đang kiểm tra quyền admin, hiển thị loading
@@ -221,7 +421,18 @@ const AddProblem = () => {
           
           <div className="p-6">
             {/* Error Message */}
-            {error && <ErrorMessage error={error} />}
+            {error && <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            </div>}
             
             {/* Success Message */}
             {success && (
@@ -434,6 +645,9 @@ const AddProblem = () => {
                   Công khai bài tập
                 </label>
               </div>
+              
+              {/* Phần Test Cases */}
+              {renderTestCasesSection()}
               
               {/* Submit Button */}
               <div className="pt-5">

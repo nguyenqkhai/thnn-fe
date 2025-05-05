@@ -226,24 +226,9 @@ const ProblemList = () => {
       
       <main className="container mx-auto px-4 py-8 flex-grow">
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          {/* Phần header với tiêu đề và nút Thêm bài tập (chỉ hiển thị cho admin) */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex justify-between items-center">
             <h1 className="text-2xl font-bold text-white">Danh Sách Bài Tập</h1>
-            
-            {/* Nút thêm bài tập - Chỉ hiển thị cho admin */}
-            {isAdmin && (
-              <Link
-                to="/admin/them-bai-tap"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Thêm bài tập
-              </Link>
-            )}
           </div>
-          
           {/* Search and Filter Section */}
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">

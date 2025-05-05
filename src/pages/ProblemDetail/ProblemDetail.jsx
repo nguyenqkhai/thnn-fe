@@ -120,6 +120,9 @@ const ProblemDetail = () => {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        console.log('Thông tin bài tập:', problemResponse.data);
+        console.log('Test cases:', problemResponse.data.test_cases);
+        
         setProblem(problemResponse.data);
         
         // Cập nhật code dựa trên ngôn ngữ đã chọn
@@ -496,6 +499,33 @@ const ProblemDetail = () => {
                 </div>
               </div>
             )}
+
+            {/* Hiển thị test case mẫu từ API */}
+            {problem.test_cases && problem.test_cases.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium text-gray-900">Test case mẫu:</h3>
+                <div className="mt-2 space-y-4">
+                  {problem.test_cases.filter(tc => tc.is_sample).map((testCase, index) => (
+                    <div key={testCase.id} className="bg-gray-50 p-3 rounded border border-gray-200">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700">Input:</h4>
+                          <pre className="mt-1 bg-white p-2 rounded overflow-x-auto border border-gray-200 text-sm">
+                            {testCase.input}
+                          </pre>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700">Output mong đợi:</h4>
+                          <pre className="mt-1 bg-white p-2 rounded overflow-x-auto border border-gray-200 text-sm">
+                            {testCase.expected_output}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             {/* Chức năng làm bài / ẩn trình soạn thảo */}
             <div className="mt-8 flex justify-center">
@@ -593,7 +623,7 @@ const ProblemDetail = () => {
                       isTesting ? 'bg-gray-500' : 'bg-orange-600 hover:bg-orange-700'
                     } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500`}
                   >
-                    {isTesting ? (
+{isTesting ? (
                       <>
                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

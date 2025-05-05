@@ -1,20 +1,26 @@
 import React from 'react';
-import Editor from '@monaco-editor/react'; // Cần cài đặt package này
+import Editor from '@monaco-editor/react';
 
 const CodeEditor = ({ code, onChange, language }) => {
   return (
-    <div className="border border-gray-300 rounded-md overflow-hidden">
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-xl shadow-lg p-4 mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-semibold text-blue-700">Trình soạn thảo mã nguồn</span>
+        {/* Có thể thêm nút copy hoặc các tiện ích khác ở đây */}
+      </div>
       <Editor
         height="400px"
         language={language}
-        theme="vs-light"
+        theme="vs-dark"
         value={code}
         onChange={onChange}
         options={{
           minimap: { enabled: false },
-          fontSize: 14,
+          fontSize: 16,
           scrollBeyondLastLine: false,
           automaticLayout: true,
+          roundedSelection: true,
+          cursorSmoothCaretAnimation: true,
         }}
       />
     </div>

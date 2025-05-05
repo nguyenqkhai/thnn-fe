@@ -7,7 +7,10 @@ import ProblemList from './pages/ProblemList/ProblemList';
 import ProblemDetail from './pages/ProblemDetail/ProblemDetail';
 import SubmissionList from './pages/Submission/SubmissionList';
 import AddProblem from './pages/Admin/AddProblem';
-
+import ManageProblems from './pages/Admin/ManageProblems';
+import EditProblem from './pages/Admin/EditProblem';
+import UserManagement from './pages/Admin/UserManagement';
+// Bảo vệ tuyến đường chỉ dành cho người dùng đã đăng nhập
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = authService.isAuthenticated();
   
@@ -102,6 +105,21 @@ const App = () => {
           </ProtectedRoute>
         } />
         
+        <Route path="/admin/quan-ly-bai-tap" element={
+  <AdminRoute>
+    <ManageProblems />
+  </AdminRoute>
+} />
+<Route path="/admin/quan-ly-nguoi-dung" element={
+  <AdminRoute>
+    <UserManagement />
+  </AdminRoute>
+} />
+<Route path="/admin/sua-bai-tap/:id" element={
+  <AdminRoute>
+    <EditProblem />
+  </AdminRoute>
+} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
