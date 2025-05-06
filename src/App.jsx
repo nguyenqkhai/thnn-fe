@@ -15,6 +15,7 @@ import AdminProfile from './pages/Profile/AdminDashboard';
 import CreateContest from './pages/Admin/CreateContest';
 import ContestList from './pages/Contest/ContestList';
 import ContestDetail from './pages/Contest/ContestDetail';
+import AdminDashboard from './pages/Profile/AdminDashboard';
 
 // Bảo vệ tuyến đường chỉ dành cho người dùng đã đăng nhập
 const ProtectedRoute = ({ children }) => {
@@ -128,6 +129,13 @@ const App = () => {
             <UserManagement />
           </AdminRoute>
         } />
+
+        <Route path="admin/quan-ly" element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        }
+        />
 
         <Route path="/admin/tao-ky-thi" element={
           <AdminRoute>

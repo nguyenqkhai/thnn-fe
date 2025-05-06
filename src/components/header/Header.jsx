@@ -129,6 +129,12 @@ const Header = () => {
                 {/* Admin dropdown menu */}
                 {isAdminMenuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200 transition-all duration-150 ease-in-out">
+                    <AdminMenuItem
+                      to="/admin/quan-ly"
+                      icon="⚙️"
+                      title="Trang quản lý"
+                      description="Xem thống kê và quản lý hệ thống"
+                    />
                     <AdminMenuItem 
                       to="/admin/quan-ly-nguoi-dung" 
                       icon="👤" 
@@ -226,6 +232,11 @@ const Header = () => {
                   <MobileNavLink to='/admin/quan-ly-bai-tap' isActive={isActive('/admin/quan-ly-bai-tap')}>
                     Quản lý bài tập
                   </MobileNavLink>
+
+                  <MobileNavLink to='/admin/quan-ly' isActive={isActive('/admin/quan-ly')}>
+                    Trang quản lý
+                  </MobileNavLink>
+
                 </div>
               </div>
             )}
