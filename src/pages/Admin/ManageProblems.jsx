@@ -175,17 +175,6 @@ const ManageProblems = () => {
     setMessage(null);
   };
 
-  // Thêm hàm để hiển thị modal hướng dẫn
-  const showHelpModal = () => {
-    alert(
-      "HƯỚNG DẪN XÓA BÀI TẬP AN TOÀN:\n\n" +
-      "1. Trước khi xóa bài tập, hãy đảm bảo xóa tất cả các bài nộp liên quan đến bài tập này.\n\n" +
-      "2. Nếu bài tập đang được sử dụng trong cuộc thi, hãy xóa bài tập khỏi cuộc thi trước.\n\n" +
-      "3. Nếu bạn không thể xóa bài tập, hãy liên hệ quản trị viên để được hỗ trợ.\n\n" +
-      "Lưu ý: Hệ thống đang gặp vấn đề với ràng buộc cơ sở dữ liệu. Chúng tôi đang khắc phục."
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -196,15 +185,6 @@ const ManageProblems = () => {
             <div className="flex flex-col md:flex-row justify-between items-center">
               <h1 className="text-2xl font-bold text-white mb-4 md:mb-0">Quản lý bài tập</h1>
               <div className="flex space-x-2">
-                <button
-                  onClick={showHelpModal}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                  </svg>
-                  Hướng dẫn xóa
-                </button>
                 <Link 
                   to="/admin/them-bai-tap" 
                   className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center"
@@ -217,27 +197,7 @@ const ManageProblems = () => {
           </div>
           
           {/* Thông báo cảnh báo */}
-          <div className="p-4 bg-yellow-50 border-b border-yellow-200 text-yellow-800">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium">Lưu ý quan trọng</h3>
-                <div className="mt-1 text-sm">
-                  Hệ thống đang gặp vấn đề với chức năng xóa bài tập. Trước khi xóa bài tập, hãy đảm bảo không có bài nộp hoặc cuộc thi liên quan đến bài tập đó.
-                  <button 
-                    onClick={showHelpModal}
-                    className="ml-2 text-yellow-800 font-medium underline"
-                  >
-                    Xem hướng dẫn
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          
           
           {/* Search and filter section */}
           <div className="p-4 border-b border-gray-200 bg-gray-50">

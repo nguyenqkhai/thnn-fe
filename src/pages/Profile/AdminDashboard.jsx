@@ -333,7 +333,7 @@ const AdminDashboard = () => {
                     
                     <div className="mt-3">
                       <Link 
-                        to="/admin/profile" 
+                        to="/thong-tin-ca-nhan" 
                         className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -341,57 +341,6 @@ const AdminDashboard = () => {
                         </svg>
                         Xem thông tin cá nhân
                       </Link>
-                    </div>
-                  </div>
-                  
-                  {/* System status */}
-                  <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-                    <h3 className="text-lg font-semibold mb-4">Trạng thái hệ thống</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">API Server</span>
-                        <span className={getStatusColor(systemStatus.apiStatus)}>
-                          ● {systemStatus.apiStatus.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Judge Server</span>
-                        <span className={getStatusColor(systemStatus.judgeStatus)}>
-                          ● {systemStatus.judgeStatus.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Database</span>
-                        <span className={getStatusColor(systemStatus.databaseStatus)}>
-                          ● {systemStatus.databaseStatus.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Admin Actions */}
-                  <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-                    <h3 className="text-lg font-semibold mb-4">Thao tác quản trị</h3>
-                    <div className="space-y-2">
-                      <Link to="/admin/quan-ly-cuoc-thi" className="w-full flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
-                        <span className="text-gray-700">Quản lý cuộc thi</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                      <Link to="/admin/tao-cuoc-thi" className="w-full flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
-                        <span className="text-gray-700">Tạo cuộc thi mới</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                      <hr className="my-2 border-gray-200" />
-                      <button className="w-full flex items-center justify-between p-2 rounded-md hover:bg-gray-50 text-left" onClick={fetchAdminStats}>
-                        <span className="text-gray-700">Làm mới số liệu</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      </button>
                     </div>
                   </div>
                 </div>
