@@ -6,7 +6,6 @@ import Footer from '../../components/footer/Footer';
 import LoadingSpinner from '../ProblemList/components/LoadingSpinner';
 import ErrorMessage from '../ProblemList/components/ErrorMessage';
 import Pagination from '../ProblemList/components/Pagination';
-import authService from '../../services/authService';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
@@ -145,7 +144,16 @@ const SubmissionList = () => {
           params
         });
         
-        setSubmissions(response.data);
+        // Đảm bảo mỗi submission có ID hợp lệ
+        const validSubmissions = response.data.map(sub => {
+          if (!sub.id || sub.id === 'undefined' || sub.id === 'null') {
+            console.warn('Phát hiện submission không có ID hợp lệ:', sub);
+            return { ...sub, id: null };
+          }
+          return sub;
+        });
+        
+        setSubmissions(validSubmissions);
         
         // Calculate total pages
         if (response.headers['x-total-count']) {
@@ -168,6 +176,11 @@ const SubmissionList = () => {
       fetchSubmissions();
     }
   }, [currentPage, filters, currentUser]);
+
+  // Kiểm tra ID submission có hợp lệ không
+  const isValidSubmissionId = (id) => {
+    return id && id !== 'undefined' && id !== 'null';
+  };
 
   // Convert status to readable text
   const getStatusText = (status) => {
@@ -206,14 +219,21 @@ const SubmissionList = () => {
 
   // Format datetime
   const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('vi-VN', {
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit',
-      hour: '2-digit', 
-      minute: '2-digit'
-    }).format(date);
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('vi-VN', {
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit', 
+        minute: '2-digit'
+      }).format(date);
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return 'N/A';
+    }
   };
 
   return (
@@ -390,17 +410,11 @@ const SubmissionList = () => {
                       >
                         Thời gian nộp
                       </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        Hành động
-                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {submissions.map((submission) => (
-                      <tr key={submission.id} className="hover:bg-gray-50">
+                      <tr key={submission.id || 'no-id'} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {submission.problem_title || 'N/A'}
                         </td>
@@ -408,7 +422,8 @@ const SubmissionList = () => {
                           {submission.username || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {submission.language === 'cpp' ? 'C++' : submission.language.charAt(0).toUpperCase() + submission.language.slice(1)}
+                          {submission.language === 'cpp' ? 'C++' : 
+                           (submission.language ? submission.language.charAt(0).toUpperCase() + submission.language.slice(1) : 'N/A')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(submission.status)}`}>
@@ -423,14 +438,6 @@ const SubmissionList = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDateTime(submission.submitted_at)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                            to={`/submissions/${submission.id}`}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Xem chi tiết
-                          </Link>
                         </td>
                       </tr>
                     ))}

@@ -190,52 +190,97 @@ const ProblemDetail = () => {
   };
 
   // Xử lý nộp bài
-  const handleSubmit = async () => {
-    if (!code.trim()) {
-      setError('Vui lòng nhập code trước khi nộp bài');
-      return;
-    }
+  // Xử lý nộp bài
+const handleSubmit = async () => {
+  if (!code.trim()) {
+    setError('Vui lòng nhập code trước khi nộp bài');
+    return;
+  }
 
-    setIsSubmitting(true);
-    setSubmissionResult(null);
-    setSuccessMessage(null);
+  setIsSubmitting(true);
+  setSubmissionResult(null);
+  setSuccessMessage(null);
+  
+  try {
+    const token = getAuthToken();
     
-    try {
-      const token = getAuthToken();
-      
-      console.log('Đang nộp bài giải:', {
-        problem_id: id,
-        code,
-        language
-      });
-      
-      const response = await axios.post(
-        `${API_BASE_URL}/submissions/`,
-        {
-          problem_id: id,
-          code,
-          language
-        },
-        {
-          headers: { 'Authorization': `Bearer ${token}` }
+    // Đảm bảo problem_id được truyền đúng định dạng
+    // Nếu problem_id trong URL là số nguyên, không cần chuyển đổi
+    const submissionData = {
+      problem_id: id, // Sử dụng id từ useParams()
+      code: code,
+      language: language,
+      contest_id: null // Nếu không có cuộc thi, gửi null
+    };
+    
+    console.log('Đang nộp bài giải:', submissionData);
+    
+    const response = await axios.post(
+      `${API_BASE_URL}/submissions/`,
+      submissionData,
+      {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      );
+      }
+    );
 
-      console.log('Kết quả nộp bài:', response.data);
+    console.log('Kết quả nộp bài:', response.data);
+    
+    // Kiểm tra xem submission có được lưu thành công không
+    if (response.data && response.data.id) {
+      console.log('Bài nộp đã được lưu thành công với ID:', response.data.id);
       setSubmissionResult(response.data);
       
       // Nếu bài giải được chấp nhận và chưa được đánh dấu là đã giải
       if (response.data.status === 'accepted' && !isAlreadySolved) {
         setIsAlreadySolved(true);
         setSuccessMessage('Chúc mừng! Bài toán đã được giải thành công.');
+      } else if (response.data.status !== 'accepted') {
+        // Nếu không được accepted, hiển thị thông báo tương ứng
+        setSuccessMessage(`Bài nộp đã được ghi nhận! Trạng thái: ${getStatusText(response.data.status)}`);
       }
-    } catch (err) {
-      console.error('Lỗi khi nộp bài:', err);
-      handleApiError(err, 'Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      console.error('Bài nộp không được lưu: Không có ID trong phản hồi');
+      setError('Bài nộp không được lưu thành công. Vui lòng thử lại sau.');
     }
-  };
+  } catch (err) {
+    console.error('Lỗi khi nộp bài:', err);
+    
+    // Log chi tiết hơn về lỗi
+    if (err.response) {
+      console.error('Phản hồi lỗi từ server:', {
+        status: err.response.status,
+        data: err.response.data,
+        headers: err.response.headers
+      });
+      
+      // Kiểm tra các lỗi cụ thể từ backend
+      if (err.response.status === 400) {
+        setError(`Lỗi dữ liệu: ${err.response.data.detail || 'Dữ liệu không hợp lệ'}`);
+      } else if (err.response.status === 401) {
+        setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        // Có thể chuyển hướng đến trang đăng nhập
+        // navigate('/login');
+      } else if (err.response.status === 404) {
+        setError('Không tìm thấy bài toán này hoặc đường dẫn không chính xác.');
+      } else if (err.response.status === 500) {
+        setError('Lỗi máy chủ. Vui lòng thử lại sau hoặc liên hệ quản trị viên.');
+      } else {
+        setError(`Có lỗi xảy ra: ${err.response.data.detail || 'Không thể nộp bài'}`);
+      }
+    } else if (err.request) {
+      console.error('Không nhận được phản hồi từ server:', err.request);
+      setError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
+    } else {
+      console.error('Lỗi cấu hình request:', err.message);
+      setError('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
+    }
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // Xử lý test code
   const handleTest = async () => {
@@ -356,10 +401,10 @@ const ProblemDetail = () => {
           <ErrorMessage error={error} />
           <div className="mt-4 flex justify-center">
             <button
-              onClick={() => navigate('/problems')}
+              onClick={() => navigate(`/problems:${id}`)}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Quay lại danh sách bài tập
+              Quay lại
             </button>
           </div>
         </div>

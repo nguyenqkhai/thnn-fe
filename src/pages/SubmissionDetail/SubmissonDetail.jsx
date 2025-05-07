@@ -18,6 +18,20 @@ const SubmissionDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // Hàm kiểm tra ID hợp lệ
+  const isValidId = (submissionId) => {
+    if (!submissionId || 
+        submissionId === 'undefined' || 
+        submissionId === 'null' || 
+        submissionId.trim() === '') {
+      return false;
+    }
+    
+    // Kiểm tra định dạng UUID - không bắt buộc nhưng có thể giúp tránh các request không cần thiết
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(submissionId);
+  };
+  
   // Hàm lấy token xác thực
   const getAuthToken = () => {
     const token = localStorage.getItem('token');
@@ -31,6 +45,14 @@ const SubmissionDetail = () => {
   useEffect(() => {
     const fetchSubmission = async () => {
       try {
+        // Kiểm tra ID hợp lệ trước khi thực hiện request
+        if (!isValidId(id)) {
+          console.error('ID bài nộp không hợp lệ:', id);
+          setError('ID bài nộp không hợp lệ hoặc không đúng định dạng. Vui lòng kiểm tra lại đường dẫn.');
+          setLoading(false);
+          return;
+        }
+        
         setLoading(true);
         const token = getAuthToken();
         
@@ -41,6 +63,14 @@ const SubmissionDetail = () => {
           }
         });
         
+        if (!response.data || !response.data.id) {
+          console.error('Phản hồi từ server không chứa thông tin bài nộp hợp lệ');
+          setError('Không tìm thấy thông tin bài nộp');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Thông tin bài nộp:', response.data);
         setSubmission(response.data);
         
         // Lấy thông tin bài tập
@@ -55,14 +85,26 @@ const SubmissionDetail = () => {
         }
       } catch (err) {
         console.error('Lỗi khi lấy thông tin bài nộp:', err);
-        if (err.response?.status === 401) {
-          setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại');
-          // Chuyển hướng đến trang đăng nhập
-          navigate('/login');
-        } else if (err.response?.status === 403) {
-          setError('Bạn không có quyền xem bài nộp này');
-        } else if (err.response?.status === 404) {
-          setError('Không tìm thấy bài nộp này');
+        
+        // Xử lý các lỗi cụ thể
+        if (err.response) {
+          if (err.response.status === 400) {
+            setError(`ID bài nộp không hợp lệ: ${err.response.data.detail || 'Vui lòng kiểm tra lại'}`);
+          } else if (err.response.status === 401) {
+            setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại');
+            // Chuyển hướng đến trang đăng nhập sau 3 giây
+            setTimeout(() => {
+              navigate('/login', { state: { returnUrl: `/submissions/${id}` } });
+            }, 3000);
+          } else if (err.response.status === 403) {
+            setError('Bạn không có quyền xem bài nộp này');
+          } else if (err.response.status === 404) {
+            setError('Không tìm thấy bài nộp này');
+          } else {
+            setError(`Có lỗi xảy ra: ${err.response.data.detail || 'Không thể tải thông tin bài nộp'}`);
+          }
+        } else if (err.request) {
+          setError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
         } else {
           setError('Có lỗi xảy ra khi tải thông tin bài nộp');
         }
@@ -84,7 +126,7 @@ const SubmissionDetail = () => {
       case 'runtime_error': return 'Lỗi thực thi';
       case 'compilation_error': return 'Lỗi biên dịch';
       case 'pending': return 'Đang chờ';
-      default: return status;
+      default: return status || 'Không xác định';
     }
   };
   
@@ -104,29 +146,38 @@ const SubmissionDetail = () => {
   
   // Hàm định dạng thời gian
   const formatDateTime = (dateTimeStr) => {
-    if (!dateTimeStr) return '';
+    if (!dateTimeStr) return 'N/A';
     
-    const date = new Date(dateTimeStr);
-    
-    // Định dạng ngày tháng
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    
-    // Định dạng giờ phút
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
+    try {
+      const date = new Date(dateTimeStr);
+      
+      // Định dạng ngày tháng
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      
+      // Định dạng giờ phút
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (e) {
+      console.error('Lỗi định dạng thời gian:', e);
+      return 'N/A';
+    }
   };
   
   // Hàm chuyển đổi language code thành tên ngôn ngữ
   const getLanguageName = (code) => {
+    if (!code) return 'N/A';
+    
     const languages = {
-      c: 'C',
-      cpp: 'C++',
-      python: 'Python',
-      pascal: 'Pascal'
+      'cpp': 'C++',
+      'python': 'Python',
+      'c': 'C',
+      'pascal': 'Pascal',
+      'java': 'Java',
+      'javascript': 'JavaScript'
     };
     return languages[code] || code;
   };
@@ -223,6 +274,14 @@ const SubmissionDetail = () => {
                 
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <dl className="space-y-3">
+                    {/* ID bài nộp */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">ID bài nộp:</dt>
+                      <dd className="text-sm text-gray-900 col-span-2 break-all">
+                        {submission.id || 'N/A'}
+                      </dd>
+                    </div>
+                    
                     {/* Bài tập */}
                     <div className="grid grid-cols-3 gap-4">
                       <dt className="text-sm font-medium text-gray-500">Bài tập:</dt>
@@ -232,7 +291,7 @@ const SubmissionDetail = () => {
                             {problem.title}
                           </Link>
                         ) : (
-                          `Bài #${submission.problem_id}`
+                          submission.problem_id ? `Bài #${submission.problem_id}` : 'N/A'
                         )}
                       </dd>
                     </div>
@@ -259,7 +318,9 @@ const SubmissionDetail = () => {
                     <div className="grid grid-cols-3 gap-4">
                       <dt className="text-sm font-medium text-gray-500">Thời gian chạy:</dt>
                       <dd className="text-sm text-gray-900 col-span-2">
-                        {submission.execution_time_ms !== null ? `${submission.execution_time_ms} ms` : '-'}
+                        {submission.execution_time_ms !== null && submission.execution_time_ms !== undefined 
+                          ? `${submission.execution_time_ms} ms` 
+                          : 'N/A'}
                       </dd>
                     </div>
                     
@@ -267,7 +328,9 @@ const SubmissionDetail = () => {
                     <div className="grid grid-cols-3 gap-4">
                       <dt className="text-sm font-medium text-gray-500">Bộ nhớ:</dt>
                       <dd className="text-sm text-gray-900 col-span-2">
-                        {submission.memory_used_kb !== null ? `${submission.memory_used_kb} KB` : '-'}
+                        {submission.memory_used_kb !== null && submission.memory_used_kb !== undefined
+                          ? `${submission.memory_used_kb} KB` 
+                          : 'N/A'}
                       </dd>
                     </div>
                     
@@ -350,22 +413,30 @@ const SubmissionDetail = () => {
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Mã nguồn</h2>
               
               <div className="border border-gray-300 rounded-md overflow-hidden">
-                <CodeEditor 
-                  code={submission.code} 
-                  onChange={() => {}} // Readonly mode
-                  language={submission.language}
-                />
+                {submission.code ? (
+                  <CodeEditor 
+                    code={submission.code} 
+                    onChange={() => {}} // Readonly mode
+                    language={submission.language}
+                  />
+                ) : (
+                  <div className="p-4 bg-gray-50 text-gray-500">
+                    Không có mã nguồn
+                  </div>
+                )}
               </div>
             </div>
             
             {/* Nút thao tác */}
             <div className="mt-6 flex justify-end space-x-4">
-              <Link
-                to={`/problems/${submission.problem_id}`} 
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                Giải lại bài này
-              </Link>
+              {submission.problem_id && (
+                <Link
+                  to={`/problems/${submission.problem_id}`} 
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  Giải lại bài này
+                </Link>
+              )}
               <Link
                 to="/cac-bai-da-nop"
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

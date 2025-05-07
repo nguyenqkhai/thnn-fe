@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../../components/header/Header';
 import Footer from '../../components/footer/Footer';
-import LoadingSpinner from '../ProblemList/components/LoadingSpinner';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import authService from '../../services/authService';
 
@@ -12,7 +12,7 @@ const API_BASE_URL = 'http://localhost:8000/api/v1';
 const CreateContest = () => {
   const navigate = useNavigate();
   
-  // State cho form
+  // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -22,18 +22,18 @@ const CreateContest = () => {
     requires_approval: false
   });
   
-  // State cho problems
+  // Problems state
   const [availableProblems, setAvailableProblems] = useState([]);
   const [selectedProblems, setSelectedProblems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // State cho loading và error
+  // Loading and error states
   const [loading, setLoading] = useState(false);
   const [problemsLoading, setProblemsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   
-  // Kiểm tra quyền admin
+  // Check if user is admin
   useEffect(() => {
     if (!authService.isAuthenticated()) {
       navigate('/login');
@@ -45,7 +45,7 @@ const CreateContest = () => {
     }
   }, [navigate]);
   
-  // Lấy danh sách bài tập
+  // Fetch available problems
   useEffect(() => {
     const fetchProblems = async () => {
       try {
@@ -68,7 +68,7 @@ const CreateContest = () => {
     fetchProblems();
   }, []);
   
-  // Các hàm xử lý form
+  // Form change handlers
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -77,13 +77,13 @@ const CreateContest = () => {
     }));
   };
   
-  // Xử lý chọn bài tập
+  // Select problem handler
   const handleProblemSelect = (problem) => {
-    // Kiểm tra xem bài đã được chọn chưa
+    // Check if already selected
     const alreadySelected = selectedProblems.some(p => p.id === problem.id);
     
     if (alreadySelected) {
-      return; // Không thêm lại bài đã chọn
+      return; // Don't add again
     }
     
     setSelectedProblems(prev => [
@@ -91,17 +91,17 @@ const CreateContest = () => {
       {
         ...problem,
         order: prev.length + 1,
-        points: 100 // Điểm mặc định
+        points: 100 // Default points
       }
     ]);
   };
   
-  // Xử lý xóa bài tập đã chọn
+  // Remove problem handler
   const handleRemoveProblem = (problemId) => {
     setSelectedProblems(prev => {
       const filtered = prev.filter(p => p.id !== problemId);
       
-      // Cập nhật lại order
+      // Update order
       return filtered.map((p, idx) => ({
         ...p,
         order: idx + 1
@@ -109,12 +109,12 @@ const CreateContest = () => {
     });
   };
   
-  // Xử lý thay đổi thứ tự bài tập
+  // Order change handler
   const handleOrderChange = (problemId, newOrder) => {
     const numericOrder = parseInt(newOrder);
     
     if (isNaN(numericOrder) || numericOrder < 1) {
-      return; // Không cập nhật nếu giá trị không hợp lệ
+      return; // Invalid value
     }
     
     setSelectedProblems(prev => {
@@ -122,17 +122,17 @@ const CreateContest = () => {
         p.id === problemId ? { ...p, order: numericOrder } : p
       );
       
-      // Sắp xếp lại theo thứ tự
+      // Sort by order
       return updatedProblems.sort((a, b) => a.order - b.order);
     });
   };
   
-  // Xử lý thay đổi điểm
+  // Points change handler
   const handlePointsChange = (problemId, newPoints) => {
     const numericPoints = parseInt(newPoints);
     
     if (isNaN(numericPoints) || numericPoints < 0) {
-      return; // Không cập nhật nếu giá trị không hợp lệ
+      return; // Invalid value
     }
     
     setSelectedProblems(prev => 
@@ -142,13 +142,13 @@ const CreateContest = () => {
     );
   };
   
-  // Lọc bài tập theo từ khóa tìm kiếm
+  // Filter problems by search term
   const filteredProblems = availableProblems.filter(problem => 
     problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (problem.tags && problem.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
   );
   
-  // Validate form trước khi submit
+  // Form validation
   const validateForm = () => {
     if (!formData.title.trim()) {
       setError('Vui lòng nhập tiêu đề cuộc thi');
@@ -186,7 +186,7 @@ const CreateContest = () => {
     return true;
   };
   
-  // Submit form tạo cuộc thi
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -200,7 +200,7 @@ const CreateContest = () => {
       
       const token = localStorage.getItem('token');
       
-      // Tạo cuộc thi
+      // Create contest
       const contestResponse = await axios.post(
         `${API_BASE_URL}/contests/`,
         formData,
@@ -214,7 +214,7 @@ const CreateContest = () => {
       
       const contestId = contestResponse.data.id;
       
-      // Thêm các bài tập vào cuộc thi
+      // Add problems to contest
       for (const problem of selectedProblems) {
         await axios.post(
           `${API_BASE_URL}/contests/${contestId}/problems`,
@@ -234,7 +234,7 @@ const CreateContest = () => {
       
       setSuccess(true);
       
-      // Chuyển hướng sau 2 giây
+      // Redirect after 2 seconds
       setTimeout(() => {
         navigate('/admin/quan-ly-cuoc-thi');
       }, 2000);
@@ -258,16 +258,25 @@ const CreateContest = () => {
           </div>
           
           <div className="p-6">
-            {/* Thông báo lỗi */}
+            {/* Error message */}
             {error && (
-              <div className="mb-4">
-                <ErrorMessage error={error} />
+              <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
               </div>
             )}
             
-            {/* Thông báo thành công */}
+            {/* Success message */}
             {success && (
-              <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4">
+              <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -281,14 +290,14 @@ const CreateContest = () => {
               </div>
             )}
             
-            {/* Form tạo cuộc thi */}
+            {/* Contest form */}
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
-                {/* Thông tin cơ bản */}
+                {/* Basic information */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <h2 className="text-lg font-medium text-gray-900 mb-4">Thông tin cuộc thi</h2>
                   
-                  {/* Tiêu đề */}
+                  {/* Title */}
                   <div className="mb-4">
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                       Tiêu đề <span className="text-red-500">*</span>
@@ -304,7 +313,7 @@ const CreateContest = () => {
                     />
                   </div>
                   
-                  {/* Mô tả */}
+                  {/* Description */}
                   <div className="mb-4">
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700">
                       Mô tả <span className="text-red-500">*</span>
@@ -323,7 +332,7 @@ const CreateContest = () => {
                     </p>
                   </div>
                   
-                  {/* Thời gian */}
+                  {/* Time settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="start_time" className="block text-sm font-medium text-gray-700">
@@ -355,7 +364,7 @@ const CreateContest = () => {
                     </div>
                   </div>
                   
-                  {/* Cài đặt quyền truy cập */}
+                  {/* Access settings */}
                   <div className="mt-4 space-y-4">
                     <div className="flex items-start">
                       <div className="flex items-center h-5">
@@ -393,11 +402,11 @@ const CreateContest = () => {
                   </div>
                 </div>
                 
-                {/* Chọn bài tập */}
+                {/* Problems section */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <h2 className="text-lg font-medium text-gray-900 mb-4">Bài tập cuộc thi</h2>
                   
-                  {/* Tìm kiếm bài tập */}
+                  {/* Search problems */}
                   <div className="mb-4">
                     <label htmlFor="search-problems" className="block text-sm font-medium text-gray-700">
                       Tìm kiếm bài tập
@@ -419,7 +428,7 @@ const CreateContest = () => {
                     </div>
                   </div>
                   
-                  {/* Danh sách bài tập có sẵn */}
+                  {/* Available problems */}
                   <div className="mb-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Bài tập có sẵn</h3>
                     <div className="border border-gray-300 rounded-md h-64 overflow-y-auto">
@@ -472,7 +481,7 @@ const CreateContest = () => {
                     <p className="mt-1 text-xs text-gray-500">Nhấp vào bài tập để thêm vào cuộc thi</p>
                   </div>
                   
-                  {/* Danh sách bài tập đã chọn */}
+                  {/* Selected problems */}
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Bài tập đã chọn</h3>
                     {selectedProblems.length === 0 ? (
@@ -552,7 +561,7 @@ const CreateContest = () => {
                   </div>
                 </div>
                 
-                {/* Nút submit */}
+                {/* Submit buttons */}
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"

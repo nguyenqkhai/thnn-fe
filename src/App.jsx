@@ -16,6 +16,8 @@ import CreateContest from './pages/Admin/CreateContest';
 import ContestList from './pages/Contest/ContestList';
 import ContestDetail from './pages/Contest/ContestDetail';
 import AdminDashboard from './pages/Profile/AdminDashboard';
+import EditContest from './pages/Contest/EditContest';
+import SubmissionDetail from './pages/SubmissionDetail/SubmissonDetail';
 
 // Bảo vệ tuyến đường chỉ dành cho người dùng đã đăng nhập
 const ProtectedRoute = ({ children }) => {
@@ -104,6 +106,9 @@ const App = () => {
 
         {/* Đường dẫn trang chi tiết cuộc thi - CHỈ GIỮA MỘT ĐƯỜNG DẪN */}
         <Route path="/cac-ky-thi/:contestId" element={<ContestDetail />} />
+
+        <Route path="/admin/sua-ky-thi/:contestId" element={<EditContest/>} />
+        <Route path="/submissions/:submissionId" element={<SubmissionDetail/>}/>
         
         {/* Updated User Profile Routes */}
         <Route path="/thong-tin-ca-nhan" element={
